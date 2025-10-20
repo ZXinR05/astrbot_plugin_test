@@ -40,17 +40,17 @@ class MyPlugin(Star):
         try:
             yield event.plain_result("下面开始绑定，请在60秒内做出响应。")
             msg = "请选择区域:\n"
+            for i, loc in enumerate(self.room_data.get('locList', []), start=1):
+                msg += f'{i}.{loc.get("name")}\n'
             yield event.plain_result(msg)
 
             @session_waiter(timeout=60, record_history_chains=False)
             async def wait_for_response(controller: SessionController, event: AstrMessageEvent):
                 try:
                     method = self.queue.get_nowait()
-                    msg = ""
+                    msg = "请选择:\n"
                     match method:
                         case 'location':
-                            for i, loc in enumerate(self.room_data.get('locList', []), start=1):
-                                msg += f'{i}.{loc.get("name")}\n'
                             loc_i = eval(event.message_str) - 1
                             loc = self.room_data.get('locList', [])[loc_i]
                             self.aid = loc.get('aid')
