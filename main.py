@@ -46,51 +46,55 @@ class MyPlugin(Star):
 
             @session_waiter(timeout=60, record_history_chains=False)
             async def wait_for_response(controller: SessionController, event: AstrMessageEvent):
+                inp = event.message_str
                 try:
                     method = self.queue.get_nowait()
                     msg = "请选择:\n"
                     match method:
                         case 'location':
-                            loc_i = eval(event.message_str) - 1
+                            loc_i = eval(inp) - 1
                             loc = self.room_data.get('locList', [])[loc_i]
                             self.aid = loc.get('aid')
                             if loc.get('buildingList', None) is not None:
+                                for i, building in enumerate(loc.get('buildingList', []), start=1):
+                                    msg += f'{i}.{building.get("building")}\n'
                                 self.queue.put('building')
                             elif loc.get('areaList', None) is not None:
+                                for i, area in enumerate(loc.get('areaList', []), start=1):
+                                    msg += f'{i}.{area.get("areaname")}\n'
                                 self.queue.put('area')
                         case 'area':
-                            for i, area in enumerate(loc.get('areaList', []), start=1):
-                                msg += f'{i}.{area.get("areaname")}\n'
-                            area_i = eval(event.message_str) - 1
+                            area_i = eval(inp) - 1
                             area = loc.get('areaList', [])[area_i]
                             self.area_id = area.get('area')
                             self.area_name = area.get('areaname')
+                            for i, building in enumerate(area.get('buildingList', []), start=1):
+                                msg += f'{i}.{building.get("building")}\n'
                             self.queue.put('building')
                         case 'building':
-                            for i, building in enumerate(loc.get('buildingList', []), start=1):
-                                msg += f'{i}.{building.get("building")}\n'
-                            building_i = eval(event.message_str) - 1
+                            building_i = eval(inp) - 1
                             building = loc.get('buildingList', area.get('buildingList', []))[building_i]
                             self.building_id = building.get('buildingid')
                             self.building_name = building.get('building')
                             if building.get('floorList', None) is not None:
+                                for i, floor in enumerate(building.get('floorList', []), start=1):
+                                    msg += f'{i}.{floor.get("floor")}\n'
                                 self.queue.put('floor')
                         case 'floor':
-                            for i, floor in enumerate(building.get('floorList', []), start=1):
-                                msg += f'{i}.{floor.get("floor")}\n'
-                            floor_i = eval(event.message_str) - 1
+                            floor_i = eval(inp) - 1
                             floor = building.get('floorList', [])[floor_i]
                             self.floor_id = floor.get('floorid')
                             self.floor_name = floor.get('floor')
                             if floor.get('roomList', None) is not None:
+                                for i, room in enumerate(floor.get('roomList', []), start=1):
+                                    msg += f'{i}.{room.get("room")}\n'
                                 self.queue.put('room')
                         case 'room':
-                            for i, room in enumerate(floor.get('roomList', []), start=1):
-                                msg += f'{i}.{room.get("room")}\n'
-                            room_i = eval(event.message_str) - 1
+                            room_i = eval(inp) - 1
                             room = floor.get('roomList', [])[room_i]
                             self.room_id = room.get('roomid')
                             self.room_name = room.get('room')
+                            msg = '完成'
                             
                     if not self.queue.empty():
                         await event.send(event.plain_result(msg))
