@@ -110,6 +110,13 @@ class MyPlugin(Star):
                     event.send(event.plain_result("输入索引错误，请重新绑定。"))
                     logger.error('[bind]输入索引错误')
                     controller.stop()
+                    
+            try:
+                await wait_for_response(event)
+            except TimeoutError:
+                yield event.plain_result('超时')
+            finally:
+                event.stop_event()
 
 
         except Exception as e:
