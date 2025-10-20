@@ -14,6 +14,11 @@ from astrbot.core.utils.session_waiter import (
 class MyPlugin(Star):
     def __init__(self, context: Context):
         self.room_data = {}
+        self.loc = None
+        self.area = None
+        self.building = None
+        self.floor = None
+        self.room = None
         self.aid = None
         self.area_id = None
         self.area_name = None
@@ -54,6 +59,7 @@ class MyPlugin(Star):
                         case 'location':
                             loc_i = eval(inp) - 1
                             loc = self.room_data.get('locList', [])[loc_i]
+                            self.loc = loc
                             self.aid = loc.get('aid')
                             if loc.get('buildingList', None) is not None:
                                 for i, building in enumerate(loc.get('buildingList', []), start=1):
@@ -65,7 +71,8 @@ class MyPlugin(Star):
                                 self.queue.put('area')
                         case 'area':
                             area_i = eval(inp) - 1
-                            area = loc.get('areaList', [])[area_i]
+                            area = self.loc.get('areaList', [])[area_i]
+                            self.area = area
                             self.area_id = area.get('area')
                             self.area_name = area.get('areaname')
                             for i, building in enumerate(area.get('buildingList', []), start=1):
@@ -73,7 +80,8 @@ class MyPlugin(Star):
                             self.queue.put('building')
                         case 'building':
                             building_i = eval(inp) - 1
-                            building = loc.get('buildingList', area.get('buildingList', []))[building_i]
+                            building = self.loc.get('buildingList', self.area.get('buildingList', []))[building_i]
+                            self.building = building
                             self.building_id = building.get('buildingid')
                             self.building_name = building.get('building')
                             if building.get('floorList', None) is not None:
@@ -82,7 +90,8 @@ class MyPlugin(Star):
                                 self.queue.put('floor')
                         case 'floor':
                             floor_i = eval(inp) - 1
-                            floor = building.get('floorList', [])[floor_i]
+                            floor = self.building.get('floorList', [])[floor_i]
+                            self.floor = floor
                             self.floor_id = floor.get('floorid')
                             self.floor_name = floor.get('floor')
                             if floor.get('roomList', None) is not None:
@@ -91,7 +100,8 @@ class MyPlugin(Star):
                                 self.queue.put('room')
                         case 'room':
                             room_i = eval(inp) - 1
-                            room = floor.get('roomList', [])[room_i]
+                            room = self.floor.get('roomList', [])[room_i]
+                            self.room = room
                             self.room_id = room.get('roomid')
                             self.room_name = room.get('room')
                             msg = '完成'
@@ -128,7 +138,6 @@ class MyPlugin(Star):
         message_str = event.message_str # 用户发的纯文本消息字符串
         message_chain = event.get_messages() # 用户所发的消息的消息链 # from astrbot.api.message_components import *
         logger.info(message_chain)
-        yield event.plain_result(f"Hello, {user_name}, 你发了 {message_str}!") # 发送一条纯文本消息
         
 
     async def terminate(self):
