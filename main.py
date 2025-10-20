@@ -40,32 +40,35 @@ class MyPlugin(Star):
         try:
             yield event.plain_result("下面开始绑定，请在60秒内做出响应。")
             msg = "请选择区域:\n"
-            for i, loc in enumerate(self.room_data.get('locList', []), start=1):
-                msg += f'{i}.{loc.get("name")}\n'
             yield event.plain_result(msg)
 
             @session_waiter(timeout=60, record_history_chains=False)
             async def wait_for_response(controller: SessionController, event: AstrMessageEvent):
                 try:
                     method = self.queue.get_nowait()
+                    msg = ""
                     match method:
                         case 'location':
+                            for i, loc in enumerate(self.room_data.get('locList', []), start=1):
+                                msg += f'{i}.{loc.get("name")}\n'
                             loc_i = eval(event.message_str) - 1
                             loc = self.room_data.get('locList', [])[loc_i]
                             self.aid = loc.get('aid')
                             if loc.get('buildingList', None) is not None:
-                                for i, building in enumerate(loc.get('buildingList', []), start=1):
-                                    msg = f'{i}.{building.get("building")}\n'
                                 self.queue.put('building')
                             elif loc.get('areaList', None) is not None:
                                 self.queue.put('area')
                         case 'area':
+                            for i, area in enumerate(loc.get('areaList', []), start=1):
+                                msg += f'{i}.{area.get("areaname")}\n'
                             area_i = eval(event.message_str) - 1
                             area = loc.get('areaList', [])[area_i]
                             self.area_id = area.get('area')
                             self.area_name = area.get('areaname')
                             self.queue.put('building')
                         case 'building':
+                            for i, building in enumerate(loc.get('buildingList', []), start=1):
+                                msg += f'{i}.{building.get("building")}\n'
                             building_i = eval(event.message_str) - 1
                             building = loc.get('buildingList', area.get('buildingList', []))[building_i]
                             self.building_id = building.get('buildingid')
@@ -73,6 +76,8 @@ class MyPlugin(Star):
                             if building.get('floorList', None) is not None:
                                 self.queue.put('floor')
                         case 'floor':
+                            for i, floor in enumerate(building.get('floorList', []), start=1):
+                                msg += f'{i}.{floor.get("floor")}\n'
                             floor_i = eval(event.message_str) - 1
                             floor = building.get('floorList', [])[floor_i]
                             self.floor_id = floor.get('floorid')
@@ -80,10 +85,18 @@ class MyPlugin(Star):
                             if floor.get('roomList', None) is not None:
                                 self.queue.put('room')
                         case 'room':
+                            for i, room in enumerate(floor.get('roomList', []), start=1):
+                                msg += f'{i}.{room.get("room")}\n'
                             room_i = eval(event.message_str) - 1
                             room = floor.get('roomList', [])[room_i]
                             self.room_id = room.get('roomid')
                             self.room_name = room.get('room')
+                            
+                    if not self.queue.empty():
+                        await event.send(event.plain_result(msg))
+                        controller.keep(timeout=60, reset_timeout=True)
+                    else:
+                        controller.stop()
                         
                 except TypeError:
                     event.send(event.plain_result("输入类型错误，请重新绑定。"))
@@ -93,7 +106,6 @@ class MyPlugin(Star):
                     event.send(event.plain_result("输入索引错误，请重新绑定。"))
                     logger.error('[bind]输入索引错误')
                     controller.stop()
-                controller.keep(timeout=60, reset_timeout=True)
 
 
         except Exception as e:
