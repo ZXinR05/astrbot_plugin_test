@@ -1,0 +1,12 @@
+{
+  "backend": {
+    "description": "Backend",
+    "type": "string",
+    "hint": "后端地址"
+  },
+  "frontend": {
+    "description": "Frontend",
+    "type": "string",
+    "hint": "前端地址"
+  }
+}
