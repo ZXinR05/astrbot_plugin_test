@@ -1,8 +1,6 @@
-# helloworld
+# HUFE 电费查询
 
-AstrBot 插件模板
-
-A template plugin for AstrBot plugin feature
+自用模块
 
 # 支持
 
