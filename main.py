@@ -1,12 +1,7 @@
 from astrbot.api.event import filter, AstrMessageEvent, MessageChain
 from astrbot.api.star import Context, Star, register
 from astrbot.api import logger, AstrBotConfig
-import astrbot.api.message_components as Comp
 from queue import Queue
-from astrbot.core.utils.session_waiter import (
-    session_waiter,
-    SessionController,
-)
 from .utils.data_handler import load_data, save_data
 from .utils.api import ElecAPI
 from .utils.encrpy import md5
@@ -40,7 +35,10 @@ class MyPlugin(Star):
         sid = event.unified_msg_origin
         self.user_map[sid] = md5(sid)
         if await self.api.is_exist(sid):
-            yield event.plain_result(f'您已绑定成功，请通过 {self.frontend}/{self.user_map[sid]} 查看或更改')
+            if await self.api.is_completed(sid):   
+                yield event.plain_result(f'您已绑定成功，请通过 {self.frontend}/{self.user_map[sid]} 查看或更改')
+            else:
+                yield event.plain_result(f'信息不完整，请通过 {self.frontend}/{self.user_map[sid]} 完善信息')
         else:
             await self.api.create_user(sid)
             yield event.plain_result(f'还未绑定，请通过 {self.frontend}/{self.user_map[sid]} 进行绑定')
@@ -53,14 +51,15 @@ class MyPlugin(Star):
         """这是一个 dian 指令"""
         sid = event.unified_msg_origin
         self.user_map[sid] = md5(sid)
+        if not await self.api.is_exist(sid):
+            yield event.plain_result(f'未绑定，请通过 {self.frontend}/{self.user_map[sid]} 进行绑定')
+        if not await self.api.is_completed(sid):
+            yield event.plain_result(f'信息不完整，请通过 {self.frontend}/{self.user_map[sid]} 完善信息')
         await self.reminder.register(self.reminder_task, [sid], sid)
         room_elec = await self.api.get_elec(sid, 0)
         ac_elec = await self.api.get_elec(sid, 1)
-        if await self.api.is_exist(sid):
-            yield event.plain_result(f'当前房间电量剩余为: {room_elec}，空调电量剩余为: {ac_elec}')
-        else:
-            yield event.plain_result(f'未绑定，请通过 {self.frontend}/{self.user_map[sid]} 进行绑定')
-
+        yield event.plain_result(f'当前房间电量剩余为: {room_elec}，空调电量剩余为: {ac_elec}')
+        
         self.schedule_data['user_map'] = self.user_map
         await save_data(self.schedule_data)
 
