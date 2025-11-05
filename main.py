@@ -39,9 +39,11 @@ class MyPlugin(Star):
                 yield event.plain_result(f'您已绑定成功，请通过 {self.frontend}/{self.user_map[sid]} 查看或更改')
             else:
                 yield event.plain_result(f'信息不完整，请通过 {self.frontend}/{self.user_map[sid]} 完善信息')
+                return
         else:
             await self.api.create_user(sid)
             yield event.plain_result(f'还未绑定，请通过 {self.frontend}/{self.user_map[sid]} 进行绑定')
+            return
 
         self.schedule_data['user_map'] = self.user_map
         await save_data(self.schedule_data)
@@ -53,8 +55,10 @@ class MyPlugin(Star):
         self.user_map[sid] = md5(sid)
         if not await self.api.is_exist(sid):
             yield event.plain_result(f'未绑定，请通过 {self.frontend}/{self.user_map[sid]} 进行绑定')
+            return
         if not await self.api.is_completed(sid):
             yield event.plain_result(f'信息不完整，请通过 {self.frontend}/{self.user_map[sid]} 完善信息')
+            return
         await self.reminder.register(self.reminder_task, [sid], sid)
         room_elec = await self.api.get_elec(sid, 0)
         ac_elec = await self.api.get_elec(sid, 1)
