@@ -67,10 +67,11 @@ class MyPlugin(Star):
         self.schedule_data['user_map'] = self.user_map
         await save_data(self.schedule_data)
 
+    @filter.permission_type(filter.PermissionType.ADMIN)
     @filter.command("debug")
     async def debug(self, event: AstrMessageEvent):
         """这是一个 debug 指令"""
-        await self.reminder_task(event.unified_msg_origin)
+        yield event.plain_result(await self.reminder.get_schedule_list())
 
     async def reminder_task(self, sid: str):
         """这是一个定时提醒任务的示例方法"""

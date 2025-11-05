@@ -30,3 +30,6 @@ class ScheduleHandler:
     
     def shutdown(self):
         self.scheduler.shutdown(wait=False)
+
+    def get_schedule_list(self):
+        return self.scheduler.get_jobs()
