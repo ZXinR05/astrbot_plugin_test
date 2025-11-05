@@ -64,8 +64,8 @@ class ElecAPI:
         return room_data.get('code') == 200 and ac_data.get('code') == 200
     
     async def is_completed(self, sid: str) -> bool:
-        room_data = await self.get_user(sid, 0).get('data', {})
-        ac_data = await self.get_user(sid, 1).get('data', {})
+        room_data = (await self.get_user(sid, 0)).get('data', {})
+        ac_data = (await self.get_user(sid, 1)).get('data', {})
         return room_data.get('roomId') and ac_data.get('roomId')
     
     async def get_schedule(self, sid: str) -> dict:
