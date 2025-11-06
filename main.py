@@ -87,5 +87,5 @@ class MyPlugin(Star):
         self.schedule_data['user_map'] = self.user_map
         await save_data(self.schedule_data)
         for sid, user_id in self.user_map.items():
-            await self.reminder.unregister(user_id)
+            await self.reminder.unregister(sid)
         await self.reminder.shutdown()

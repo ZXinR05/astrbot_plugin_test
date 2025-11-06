@@ -12,10 +12,10 @@ class Reminder:
     async def register(self, task:Callable, args:list, sid:str):
         data = await self.api.get_schedule(sid)
         await self.unregister(sid)
-        self.scheduler.add_all(task, args, data)
+        await self.scheduler.add_all(task, args, data)
 
     async def get_schedule_list(self):
-        jobs = self.scheduler.get_schedule_list()
+        jobs = await self.scheduler.get_schedule_list()
         jobs_summary = ''
         for i, job in enumerate(jobs):
         # 格式化下次运行时间。如果 next_run_time 为 None (已完成或暂停)，则显示 N/A
@@ -37,10 +37,13 @@ class Reminder:
         return jobs_summary
 
     async def unregister(self, sid:str):
-        self.scheduler.remove_all(md5(sid))
+        await self.scheduler.remove_all(md5(sid))
+        logger.info(f'Scheduler:{id(self.scheduler.scheduler)} 移除了{sid}的所有任务')
 
     async def start(self):
-        self.scheduler.start()
+        await self.scheduler.start()
+        logger.info(f'Scheduler:{id(self.scheduler.scheduler)} 正常启动')
 
     async def shutdown(self):
-        self.scheduler.shutdown()
+        logger.info(f'Scheduler:{id(self.scheduler.scheduler)} 被优雅地关闭')
+        await self.scheduler.shutdown()
