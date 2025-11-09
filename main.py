@@ -92,10 +92,12 @@ class MyPlugin(Star):
         """这是一个 debug 指令"""
         yield event.plain_result(await self.reminder.get_schedule_list())
 
-    async def reminder_task(self, sid: str):
+    async def reminder_task(self, sid: str, scheduler_id: str='Undefined'):
         """这是一个定时提醒任务的示例方法"""
         room_elec = await self.api.get_elec(sid, 0)
         ac_elec = await self.api.get_elec(sid, 1)
+
+        logger.info(f'Scheduler: {scheduler_id} 正在向SID: {sid} 执行任务!')
 
         message = MessageChain().message(f"[自动提醒]当前房间电量剩余为: {room_elec}，空调电量剩余为: {ac_elec}")
         await self.context.send_message(sid, message_chain=message)

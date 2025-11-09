@@ -10,6 +10,7 @@ class Reminder:
         self.api = api
 
     async def register(self, task:Callable, args:list, sid:str):
+        args.append(id(self.scheduler.scheduler))
         data = await self.api.get_schedule(sid)
         await self.unregister(sid)
         await self.scheduler.add_all(task, args, data)
