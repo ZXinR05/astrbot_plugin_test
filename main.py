@@ -1,6 +1,7 @@
 from astrbot.api.event import filter, AstrMessageEvent, MessageChain
 from astrbot.api.star import Context, Star, register
 from astrbot.api import logger, AstrBotConfig
+import astrbot.api.message_components as Comp
 from queue import Queue
 from .utils.data_handler import load_data, save_data
 from .utils.api import ElecAPI
@@ -54,7 +55,7 @@ class MyPlugin(Star):
         sid = event.unified_msg_origin
         self.user_map[sid] = md5(sid)
         if not await self.api.is_exist(sid):
-            yield event.plain_result(f'未绑定，请通过 {self.frontend}/{self.user_map[sid]} 进行绑定')
+            yield event.plain_result(f'未绑定，请通过 /bind 进行绑定')
             return
         if not await self.api.is_completed(sid):
             yield event.plain_result(f'信息不完整，请通过 {self.frontend}/{self.user_map[sid]} 完善信息')
@@ -66,6 +67,24 @@ class MyPlugin(Star):
         
         self.schedule_data['user_map'] = self.user_map
         await save_data(self.schedule_data)
+
+    @filter.command("chart")
+    async def chart(self, event: AstrMessageEvent):
+        sid = event.unified_msg_origin
+        self.user_map[sid] = md5(sid)
+        if not await self.api.is_exist(sid):
+            yield event.plain_result(f'未绑定，请通过 /bind 进行绑定')
+            return
+        if not await self.api.is_completed(sid):
+            yield event.plain_result(f'信息不完整，请通过 {self.frontend}/{self.user_map[sid]} 完善信息')
+            return
+        
+        imgbase64 = await self.api.get_line_chart(sid, 0)
+        chain = [
+            Comp.Image.fromBase64(imgbase64)
+        ]
+        yield event.chain_result(chain)
+        
 
     @filter.permission_type(filter.PermissionType.ADMIN)
     @filter.command("debug")

@@ -12,6 +12,7 @@ class ElecAPI:
             "getUser": "/api/v1/getUserByUserId",
             "getElec": "/api/v1/getElec",
             "getSchedule": "/api/v1/getScheduleByUserId",
+            "getLineChart": "/api/v1/getLineChartByUserId"
         }
 
     async def create_user(self, user_id: str) -> dict:
@@ -87,6 +88,23 @@ class ElecAPI:
             except httpx.HTTPStatusError as e:
                 logger.error(f"HTTP 状态错误: {e}")
                 return {"error": str(e)}
+            
+    async def get_line_chart(self, sid: str, isac: int):
+        url = self.backend_url + self.api['getLineChart']
+        async with httpx.AsyncClient() as client:
+            try:
+                response = await client.post(url, data={"userId": md5(sid), "isAc": isac})
+                data = response.json()
+                if data.get('code') != 200:
+                    raise httpx.HTTPStatusError(data.get('code'))
+                return data.get('data', None)
+            except httpx.RequestError as e:
+                logger.error(f"请求错误: {e}")
+                return {"error": str(e)}
+            except httpx.HTTPStatusError as e:
+                logger.error(f"HTTP 状态错误: {e}")
+                return {"error": str(e)}
+
             
         
         
