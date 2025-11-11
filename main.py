@@ -99,7 +99,7 @@ class MyPlugin(Star):
 
         logger.info(f'Scheduler: {scheduler_id} 正在向SID: {sid} 执行任务!')
 
-        message = MessageChain().message(f"[自动提醒]当前房间电量剩余为: {room_elec}，空调电量剩余为: {ac_elec}")
+        message = MessageChain().message(f"[DEBUG]当前执行任务的Scheduler: {scheduler_id}").message(f"[自动提醒]当前房间电量剩余为: {room_elec}，空调电量剩余为: {ac_elec}")
         await self.context.send_message(sid, message_chain=message)
         
 
